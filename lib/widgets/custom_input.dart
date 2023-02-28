@@ -12,10 +12,10 @@ class CustomInput extends StatelessWidget {
     this.icon,
     this.inputType,
     required this.formProperty,
-    required this.formValues,
     this.autocorrect,
     this.validator,
     required this.name,
+    this.onChanged,
   });
 
   final String? hintText;
@@ -32,7 +32,8 @@ class CustomInput extends StatelessWidget {
   final String name;
 
   final String formProperty;
-  final Map<String, dynamic> formValues;
+
+  final void Function(String?)? onChanged;
 
   static Map<String, TextInputType> inputTypeOptions = {
     'email': TextInputType.emailAddress,
@@ -50,7 +51,7 @@ class CustomInput extends StatelessWidget {
         keyboardType: inputTypeOptions[inputType],
         autocorrect: autocorrect ?? false,
         obscureText: inputType == 'password',
-        onChanged: (value) => formValues[formProperty] = value,
+        onChanged: onChanged,
         validator: validator,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         decoration: InputDecoration(

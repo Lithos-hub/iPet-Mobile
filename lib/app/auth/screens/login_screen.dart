@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:ipet_mobile/providers/auth_provider.dart';
 
 import 'package:ipet_mobile/theme/app_theme.dart';
 import 'package:ipet_mobile/widgets/widgets.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key, required this.appBar});
@@ -11,11 +13,6 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> formValues = {
-      'email': '',
-      'password': '',
-    };
-
     return Scaffold(
       body: AuthBackground(
         child: SingleChildScrollView(
@@ -27,7 +24,10 @@ class LoginScreen extends StatelessWidget {
               Column(
                 children: [
                   const AuthLogo(),
-                  _LoginForm(formValues: formValues),
+                  ChangeNotifierProvider(
+                    create: (_) => AuthProvider(),
+                    child: const _LoginForm(),
+                  ),
                 ],
               ),
               const SizedBox(height: 50),
@@ -49,21 +49,18 @@ class LoginScreen extends StatelessWidget {
 }
 
 class _LoginForm extends StatelessWidget {
-  _LoginForm({
-    super.key,
-    required this.formValues,
-  });
-
-  final Map<String, dynamic> formValues;
-  final _formKey = GlobalKey<FormBuilderState>();
+  const _LoginForm();
 
   @override
   Widget build(BuildContext context) {
+    final loginForm = Provider.of<AuthProvider>(context);
+    loginForm.email = '';
+    loginForm.password = '';
     return Container(
       margin: const EdgeInsets.all(20),
       child: FormBuilder(
-        key: _formKey,
-        initialValue: const {'email': 'patata', 'password': ''},
+        key: loginForm.loginFormKey,
+        initialValue: const {'email': '', 'password': ''},
         child: CardContainer(
           child: Column(children: [
             CustomInput(
@@ -72,13 +69,15 @@ class _LoginForm extends StatelessWidget {
               labelText: 'Correo electrónico',
               inputType: 'email',
               formProperty: 'email',
-              formValues: formValues,
               suffixIcon: Icons.email,
               autocorrect: false,
+              onChanged: (value) => loginForm.email = value as String,
               validator: FormBuilderValidators.compose(
                 [
-                  FormBuilderValidators.required(),
-                  FormBuilderValidators.email(),
+                  FormBuilderValidators.required(
+                      errorText: "El email es obligatorio"),
+                  FormBuilderValidators.email(
+                      errorText: "Introduce un email válido"),
                 ],
               ),
             ),
@@ -89,11 +88,12 @@ class _LoginForm extends StatelessWidget {
               labelText: 'Contraseña',
               formProperty: 'password',
               inputType: 'password',
-              formValues: formValues,
               suffixIcon: Icons.lock,
+              onChanged: (value) => loginForm.password = value as String,
               validator: FormBuilderValidators.compose(
                 [
-                  FormBuilderValidators.required(),
+                  FormBuilderValidators.required(
+                      errorText: "La contraseña es obligatorio"),
                   FormBuilderValidators.match(
                       r'^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^\w\d\s:])([^\s]){8,}$',
                       errorText: 'Usa [A-Z], [a-z], 0-9, y símbolos'),
@@ -102,9 +102,23 @@ class _LoginForm extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             CustomButton(
-              onPressed: () => Navigator.pushNamed(context, 'home'),
+              onPressed: loginForm
+                      .isSubmitting // => Disable the button if is submitting
+                  ? null
+                  : () async {
+                      FocusScope.of(context).unfocus(); // => Remove keyboard
+
+                      if (!loginForm.isValidForm()) return;
+                      loginForm.isSubmitting = true;
+
+                      // If error: isSubmitting = false
+                      // else: redirects to 'home'
+
+                      Navigator.pushNamed(context, 'home');
+                      loginForm.isSubmitting = false;
+                    },
               color: AppTheme.primary,
-              text: "Acceder",
+              text: loginForm.isSubmitting ? 'Validando...' : 'Acceder',
             )
           ]),
         ),

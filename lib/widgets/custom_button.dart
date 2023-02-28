@@ -7,16 +7,14 @@ class CustomButton extends StatelessWidget {
       required this.color,
       required this.text});
 
-  final Function onPressed;
+  final void Function()? onPressed;
   final Color color;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return MaterialButton(
-      onPressed: () {
-        Navigator.pushNamed(context, 'home');
-      },
+      onPressed: onPressed,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(30),
       ),
