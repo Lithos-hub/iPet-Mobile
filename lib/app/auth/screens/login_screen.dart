@@ -107,6 +107,7 @@ class _LoginForm extends StatelessWidget {
                   ? null
                   : () async {
                       FocusScope.of(context).unfocus(); // => Remove keyboard
+                      Navigator.pushNamed(context, 'home');
 
                       if (!loginForm.isValidForm()) return;
                       loginForm.isSubmitting = true;
